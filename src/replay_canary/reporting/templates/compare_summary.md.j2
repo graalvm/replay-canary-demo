@@ -1,0 +1,30 @@
+# Replay canary comparison: {{ summary.outcome }}
+
+Comparison: {{ summary.comparison_name | markdown_code }}
+
+{% if summary.code_changes %}
+**Target code hash** changed in {{ summary.changed_runs }} {{ "run" if summary.changed_runs == 1 else "runs" }} ({{ summary.unchanged_runs }} unchanged, {{ summary.failed_runs }} failed, {{ summary.skipped_runs }} skipped):
+{% for suite in summary.code_changes %}
+* {{ suite.suite_name | markdown_code }}: {% for workload in suite.workloads %}{{ workload | markdown_code }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endfor %}
+{% elif summary.has_comparable_runs %}
+**Target code hash** is stable ({{ summary.changed_runs }} changed, {{ summary.unchanged_runs }} unchanged, {{ summary.failed_runs }} failed, {{ summary.skipped_runs }} skipped).
+{% else %}
+**Target code hash** is unavailable ({{ summary.failed_runs }} failed, {{ summary.skipped_runs }} skipped).
+{% endif %}
+
+Metric deltas: negative percentages indicate improvements; positive percentages indicate regressions.
+
+{% for metric in summary.metrics %}
+**{{ metric.label }}** (threshold ±{{ metric.threshold_percent }}%){% if metric.suites %} changed in the following workloads:
+{% for suite in metric.suites %}
+* {{ suite.suite_name | markdown_code }}: {% for workload in suite.workloads %}{{ workload.workload_name | markdown_code }} ({{ workload.delta }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% endfor %}
+{% elif metric.available %} is stable.
+{% else %} is unavailable.
+{% endif %}
+
+{% endfor %}
+Baseline replay: {{ summary.baseline_name | markdown_code }} at {{ summary.baseline_revision | markdown_code }}
+
+Candidate replay: {{ summary.candidate_name | markdown_code }} at {{ summary.candidate_revision | markdown_code }}

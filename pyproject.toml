@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "replay-canary"
+version = "0.1.0"
+description = "Detect GraalVM compiler performance changes with replay compilation."
+readme = "README.md"
+license = "UPL-1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "jinja2>=3.1,<4",
+    "tomli>=2; python_version < '3.11'",
+]
+
+[project.scripts]
+replay-canary = "replay_canary.cli:main"
+
+[dependency-groups]
+dev = [
+    "black>=25.1",
+    "isort>=6",
+    "mypy>=1.15",
+    "pytest>=8.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/replay_canary"]
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

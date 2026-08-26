@@ -1,0 +1,18 @@
+{
+  "baseline_replay_id": "00000000-0000-4000-8000-000000000002",
+  "candidate_replay_id": "00000000-0000-4000-8000-000000000003",
+  "corpus_id": "00000000-0000-4000-8000-000000000001",
+  "counts": {
+    "compared": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "created_at": "2026-07-30T12:34:56Z",
+  "id": "00000000-0000-4000-8000-000000000004",
+  "label": "comparison",
+  "report": "report.html",
+  "summary": "summary.md",
+  "thresholds": {
+    "instructions": "0.01"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "benchmark_suites": [
+    {
+      "name": "renaissance",
+      "version": "0.16.0"
+    }
+  ],
+  "commit": {
+    "author_name": "Contributor",
+    "committed_at": "2026-07-30T12:34:56Z",
+    "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "parent_hashes": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "subject": "Compiler revision"
+  },
+  "created_at": "2026-07-30T12:34:56Z",
+  "graalvm_home": "/graalvm",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "label": "corpus",
+  "mx_version": "mx 7",
+  "recording_parameters": {
+    "heap_size": "8g",
+    "hot_method_threshold": "0.001",
+    "hot_window_size": 30,
+    "jvm_args": [],
+    "runs": 1,
+    "sampling_frequency": 1000,
+    "timeout_seconds": 1200
+  },
+  "runs": [
+    {
+      "key": {
+        "run_index": 0,
+        "suite_name": "renaissance",
+        "workload_name": "scrabble"
+      },
+      "log": "runs/renaissance--scrabble--0/output.log",
+      "outcome": {
+        "duration_seconds": 1.25,
+        "exit_code": 0,
+        "message": null,
+        "status": "succeeded",
+        "timed_out": false
+      },
+      "replay_files": "runs/renaissance--scrabble--0/replays",
+      "replayable_compilations": 2
+    }
+  ]
+}

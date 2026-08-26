@@ -1,0 +1,23 @@
+[tools]
+mx = "mx"
+
+[graal]
+repository = "../graal"
+
+[data]
+directory = "replay-canary-data"
+
+[record]
+benchmark_suites = ["renaissance", "dacapo", "scala-dacapo"]
+runs = 1
+hot_window_size = 30
+hot_method_threshold = "0.001"
+
+[replay]
+iterations = 2
+retired_instruction_event = "PAPI_TOT_INS"
+
+[compare]
+retired_instructions_threshold = "0.03"
+allocated_memory_threshold = "0.02"
+target_code_size_threshold = "0.02"

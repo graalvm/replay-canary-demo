@@ -1,0 +1,359 @@
+<!--
+Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+The Universal Permissive License (UPL), Version 1.0
+
+Subject to the condition set forth below, permission is hereby granted to any
+person obtaining a copy of this software, associated documentation and/or
+data (collectively the "Software"), free of charge and under any and all
+copyright rights in the Software, and any and all patent rights owned or
+freely licensable by each licensor hereunder covering either (i) the
+unmodified Software as contributed to or provided by such licensor, or (ii)
+the Larger Works (as defined below), to deal in both
+
+(a) the Software, and
+
+(b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+one is included with the Software (each a "Larger Work" to which the Software
+is contributed by such licensors),
+
+without restriction, including without limitation the rights to copy, create
+derivative works of, display, perform, and distribute the Software and make,
+use, sell, offer for sale, import, export, have made, and have sold the
+Software and the Larger Work(s), and to sublicense the foregoing rights on
+either these or other terms.
+
+This license is subject to the following condition:
+
+The above copyright notice and either this complete permission notice or at a
+minimum a reference to the UPL must be included in all copies or substantial
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Replay canary report — {{ report.comparison.display_name }}</title>
+  <style>
+    :root {
+      --bg: #edf2f6;
+      --panel: #111d28;
+      --panel-strong: #14212d;
+      --panel-soft: #182734;
+      --line: rgba(164, 185, 202, .17);
+      --line-strong: rgba(164, 185, 202, .28);
+      --ink: #edf5fb;
+      --muted: #a9bbc8;
+      --accent: #78bed7;
+      --accent-strong: #aed9e9;
+      --accent-soft: rgba(120, 190, 215, .13);
+      --stable: #6fc7c7;
+      --changed: #f0a463;
+      --improved: #6ad0af;
+      --missing: #92aac0;
+      --partial: #a8a6f0;
+      --failed: #ef9295;
+      --hero: #182f43;
+      --mono: "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+      --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --radius-xl: 18px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
+    body { min-height: 100vh; margin: 0; color: var(--ink); font-family: var(--sans); }
+    main { width: min(1680px, calc(100% - 40px)); margin: 20px auto 44px; }
+    a { color: inherit; }
+    .mono { font-family: var(--mono); }
+    .hero, .card, .section-panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .hero {
+      padding: 22px 24px 24px;
+      overflow: hidden;
+      border-color: transparent;
+      border-radius: var(--radius-xl);
+      background: var(--hero);
+    }
+    h1 { margin: 0; font: 700 clamp(1.9rem, 3.4vw, 2.9rem)/1 var(--serif); letter-spacing: -.02em; }
+    .hero-meta { margin: 10px 0 0; color: var(--muted); font-size: .94rem; line-height: 1.55; }
+    .hero-meta strong { color: var(--accent-strong); font-family: var(--mono); font-weight: 600; }
+    button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--accent-strong);
+      font: 700 .82rem/1.2 var(--sans);
+      padding: 7px 11px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .revision-grid, .stats-grid, .metric-grid, .detail-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .revision-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 14px; }
+    .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0; }
+    .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 14px; }
+    .detail-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-bottom: 12px; }
+    .card { min-width: 0; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--panel-strong); }
+    .revision-card { position: relative; overflow: hidden; border-color: var(--line-strong); background: linear-gradient(180deg, #12202b, #14232f); }
+    .revision-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--accent), transparent); opacity: .65; }
+    .card-label { margin: 0 0 8px; color: var(--muted); font-size: .77rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .revision-card .card-label { color: var(--accent-strong); }
+    .card-value { margin: 0; overflow-wrap: anywhere; font: 600 .96rem/1.45 var(--mono); }
+    .card-note { margin: 7px 0 0; color: var(--muted); font-size: .86rem; line-height: 1.48; overflow-wrap: anywhere; }
+    .revision-subject { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--ink); }
+    .stat-value { margin: 0; font-size: 1.8rem; font-weight: 600; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .stats-card-changed .stat-value, .metric-card.tone-increase .stat-value { color: var(--changed); }
+    .stats-card-stable .stat-value, .metric-card.tone-unchanged .stat-value { color: var(--stable); }
+    .metric-card.tone-decrease .stat-value { color: var(--improved); }
+    .stats-card-other .stat-value, .metric-card.tone-unavailable .stat-value { color: var(--missing); }
+    .metric-card { border-top: 3px solid var(--accent); }
+    .metric-totals { display: grid; gap: 5px; margin-top: 10px; }
+    .metric-total, .pair-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .metric-total { font-size: .9rem; }
+    .metric-total span:first-child, .pair-label { color: var(--muted); font-size: .75rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .metric-total span:last-child, .pair-value { font-family: var(--mono); text-align: right; }
+    .section-panel { margin-top: 14px; padding: 18px 20px 16px; border-radius: var(--radius-xl); }
+    .section-header { display: flex; align-items: end; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+    h2 { margin: 0; font: 700 1.55rem/1.2 var(--serif); }
+    .warmup-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-soft); color: var(--muted); font-size: .84rem; cursor: pointer; user-select: none; }
+    .warmup-toggle input { accent-color: var(--accent); }
+    .table-shell { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); background: #0e1923; }
+    table { width: 100%; min-width: 1080px; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    thead th { position: sticky; top: 0; z-index: 1; background: #182734; color: var(--muted); font-size: .77rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+    tbody tr:last-child > td { border-bottom: 0; }
+    tbody tr.run-summary:hover > td { background: rgba(120, 190, 215, .07); }
+    .run-summary-expanded > td { background: rgba(30, 48, 63, .88) !important; border-bottom-color: var(--line-strong); }
+    .run-link { font-weight: 700; text-decoration: none; }
+    .run-link:hover { color: var(--accent-strong); }
+    .run-meta { margin-top: 6px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+    .status { display: inline; color: var(--muted); font-size: .83rem; font-weight: 700; letter-spacing: .01em; }
+    .status-compared, .status-matched { color: var(--stable); }
+    .status-changed { color: var(--changed); }
+    .status-failed { color: var(--failed); }
+    .status-skipped, .status-unavailable { color: var(--missing); }
+    .status-baseline_only, .status-candidate_only { color: var(--partial); }
+    .pair { display: grid; min-width: 155px; gap: 6px; }
+    .pair-delta { font-size: .84rem; font-weight: 700; text-align: right; }
+    .pair-increase .pair-delta { color: var(--changed); }
+    .pair-decrease .pair-delta { color: var(--improved); }
+    .pair-unchanged .pair-delta { color: var(--stable); }
+    .pair-unavailable .pair-delta { color: var(--missing); }
+    .pair-diagnostic .pair-delta { color: var(--accent); }
+    .pair-line { font-size: .88rem; line-height: 1.35; }
+    .detail-row > td { padding: 0; background: var(--panel); }
+    .detail-body { padding: 22px 18px 18px; }
+    .detail-card { min-width: 0; padding: 12px 13px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel-soft); }
+    .detail-card .stat-value { font-size: 1.35rem; }
+    .detail-card.tone-increase .stat-value { color: var(--changed); }
+    .detail-card.tone-decrease .stat-value { color: var(--improved); }
+    .detail-card.tone-unchanged .stat-value { color: var(--stable); }
+    .detail-card.tone-unavailable .stat-value { color: var(--missing); }
+    .detail-card.tone-diagnostic .stat-value { color: var(--accent); }
+    .detail-status { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 12px; }
+    .compilation-table { min-width: 1500px; }
+    .identity { min-width: 300px; }
+    .identity-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 9px; color: var(--muted); font: 700 .78rem/1.4 var(--mono); }
+    .method { font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+    .replay-path { margin-top: 7px; color: var(--muted); font: .78rem/1.45 var(--mono); overflow-wrap: anywhere; }
+    footer { margin-top: 14px; color: #63798a; text-align: center; font-size: .86rem; line-height: 1.6; }
+    footer a { color: #4d8297; }
+    @media (max-width: 960px) {
+      main { width: calc(100% - 20px); margin-top: 10px; }
+      .section-header { align-items: start; flex-direction: column; }
+      .revision-grid, .stats-grid, .metric-grid, .detail-grid { grid-template-columns: 1fr; }
+      .section-panel, .hero, .detail-body { padding-left: 16px; padding-right: 16px; }
+    }
+    @media (min-width: 1900px) { main { width: min(2320px, calc(100% - 28px)); } }
+  </style>
+</head>
+<body>
+{% macro revision_card(item) %}
+<article class="card revision-card">
+  <p class="card-label">{{ item.role }}</p>
+  <p class="card-note"><span>{{ item.author_name }}</span> · <span>{{ item.committed_at }}</span> · <span class="mono" title="{{ item.revision }}">{{ item.revision[:12] }}</span></p>
+  <p class="card-note revision-subject">{{ item.subject }}</p>
+  <p class="card-note">Replay args: {% if not item.replay_args %}none{% endif %}</p>
+  {% for argument in item.replay_args %}<p class="card-note mono">{{ argument }}</p>{% endfor %}
+</article>
+{% endmacro %}
+
+{% macro metric_pair(metric) %}
+<div class="pair pair-{{ metric.tone }}">
+  <div class="pair-delta">{{ metric.delta }}</div>
+  <div class="pair-line"><span class="pair-label">baseline</span><span class="pair-value">{{ metric.baseline }}</span></div>
+  <div class="pair-line"><span class="pair-label">candidate</span><span class="pair-value">{{ metric.candidate }}</span></div>
+</div>
+{% endmacro %}
+
+{% macro metric_card(metric) %}
+<article class="card metric-card tone-{{ metric.tone }}">
+  <p class="card-label">{{ metric.label }}</p>
+  <p class="stat-value">{{ metric.delta }}</p>
+  <div class="metric-totals">
+    <div class="metric-total"><span>baseline</span><span>{{ metric.baseline }}</span></div>
+    <div class="metric-total"><span>candidate</span><span>{{ metric.candidate }}</span></div>
+  </div>
+  {% if metric.description %}<p class="card-note">{{ metric.description }}</p>{% endif %}
+</article>
+{% endmacro %}
+
+<main>
+  <header class="hero">
+    <h1>Replay canary report</h1>
+    <p class="hero-meta"><strong>{{ report.comparison.display_name }}</strong> · candidate {{ report.candidate.display_name }} · baseline {{ report.baseline.display_name }} · generated {{ report.generated_at }}</p>
+    <div class="revision-grid">
+      <article class="card revision-card">
+        <p class="card-label">Corpus</p>
+        {% if report.corpus.label %}<p class="card-value">{{ report.corpus.label }}</p>{% endif %}
+        <p class="card-note mono">{{ report.corpus_path }}</p>
+      </article>
+      {{ revision_card(report.baseline_revision) }}
+      {{ revision_card(report.candidate_revision) }}
+    </div>
+  </header>
+
+  <section class="stats-grid" aria-label="Run summary">
+    <article class="card"><p class="card-label">Compared runs</p><p class="stat-value">{{ report.compared_runs }}</p><p class="card-note">Run pairs with comparable replay results.</p></article>
+    <article class="card stats-card-changed"><p class="card-label">Changed runs</p><p class="stat-value">{{ report.changed_runs }}</p><p class="card-note">Run pairs whose aggregate target-code hash changed.</p></article>
+    <article class="card stats-card-stable"><p class="card-label">Unchanged runs</p><p class="stat-value">{{ report.unchanged_runs }}</p><p class="card-note">Compared run pairs whose aggregate target-code hash stayed stable.</p></article>
+    <article class="card stats-card-other"><p class="card-label">Other</p><p class="stat-value">{{ report.failed_runs + report.skipped_runs }}</p><p class="card-note">{{ report.failed_runs }} failed / {{ report.skipped_runs }} skipped and not compared.</p></article>
+  </section>
+
+  <section class="metric-grid" aria-label="Headline metrics">
+    {% for metric in report.aggregate_metrics %}{{ metric_card(metric) }}{% endfor %}
+  </section>
+
+  <section class="section-panel">
+    <div class="section-header">
+      <h2>Runs</h2>
+      <label class="warmup-toggle"><input id="include-warmup" type="checkbox"> Show iteration 0 compilation rows</label>
+    </div>
+    <div class="table-shell">
+      <table>
+        <thead><tr><th>Run</th><th>Target code hash</th><th>Retired instructions</th><th>Allocated memory</th><th>Target code size</th><th>Compilations</th></tr></thead>
+        <tbody>
+        {% for run in report.runs %}
+          <tr class="run-summary">
+            <td>
+              <a class="run-link" href="#{{ run.anchor }}">{{ run.suite_name }}:{{ run.workload_name }}</a>
+              <div class="run-meta">run {{ run.run_index }}</div>
+              <div class="run-meta"><span class="status status-{{ run.status }}">{{ run.status }}</span>{% if run.message %} · {{ run.message }}{% endif %}</div>
+            </td>
+            <td>{{ metric_pair({"tone": "changed" if run.code_changed else "unchanged" if run.code_changed is not none else "unavailable", "delta": "changed" if run.code_changed else "stable" if run.code_changed is not none else "n/a", "baseline": run.baseline_hash, "candidate": run.candidate_hash}) }}</td>
+            {% for metric in run.metrics[:3] %}<td>{{ metric_pair(metric) }}</td>{% endfor %}
+            <td>
+              <div class="detail-status"><span class="status status-{{ "matched" if run.compilations else "unavailable" }}">{{ run.compared_compilations }} compared</span>{% if run.changed_compilations %}<span class="status status-changed">{{ run.changed_compilations }} changed</span>{% endif %}</div>
+              <button type="button" data-run-toggle="{{ run.anchor }}" aria-controls="{{ run.anchor }}" aria-expanded="false">Show details</button>
+            </td>
+          </tr>
+          <tr id="{{ run.anchor }}" class="detail-row" hidden>
+            <td colspan="6">
+              <div class="detail-body">
+                <div class="detail-grid">
+                  <article class="detail-card"><p class="card-label">Compilations</p><p class="stat-value">{{ run.compared_compilations }}</p><p class="card-note">Present in both replays.</p></article>
+                  <article class="detail-card tone-increase"><p class="card-label">Changed code hash</p><p class="stat-value">{{ run.changed_compilations }}</p><p class="card-note">Matched compilations with different code.</p></article>
+                  <article class="detail-card tone-unchanged"><p class="card-label">Unchanged code hash</p><p class="stat-value">{{ run.unchanged_compilations }}</p><p class="card-note">Matched compilations with stable code.</p></article>
+                  {% for metric in run.metrics[3:] %}<article class="detail-card tone-{{ metric.tone }}"><p class="card-label">{{ metric.label }}</p><p class="stat-value">{{ metric.delta }}</p><div class="metric-totals"><div class="metric-total"><span>baseline</span><span>{{ metric.baseline }}</span></div><div class="metric-total"><span>candidate</span><span>{{ metric.candidate }}</span></div></div></article>{% endfor %}
+                </div>
+                {% if run.baseline_only_compilations or run.candidate_only_compilations %}<div class="detail-status">{% if run.baseline_only_compilations %}<span class="status status-baseline_only">{{ run.baseline_only_compilations }} baseline only</span>{% endif %}{% if run.candidate_only_compilations %}<span class="status status-candidate_only">{{ run.candidate_only_compilations }} candidate only</span>{% endif %}</div>{% endif %}
+                {% if run.compilations %}
+                <div class="table-shell">
+                  <table class="compilation-table">
+                    <thead><tr><th>Compilation</th><th>Target code hash</th>{% for metric in run.metrics %}<th>{{ metric.label }}</th>{% endfor %}</tr></thead>
+                    <tbody>
+                    {% for compilation in run.compilations %}
+                      <tr data-warmup="{{ "true" if compilation.iteration == 0 else "false" }}"{% if compilation.iteration == 0 %} hidden{% endif %}>
+                        <td class="identity">
+                          <div class="identity-tags"><span>iter {{ compilation.iteration }}</span><span>compile {{ compilation.compile_id }}</span><span>bci {{ compilation.entry_bci }}</span><span class="status status-{{ compilation.presence }}">{{ compilation.presence|replace("_", " ") }}</span></div>
+                          <div class="method">{{ compilation.method_name }}</div>
+                          {% if compilation.replay_path %}<div class="replay-path">{{ compilation.replay_path }}</div>{% endif %}
+                        </td>
+                        <td>{{ metric_pair({"tone": "changed" if compilation.code_changed else "unchanged" if compilation.code_changed is not none else "unavailable", "delta": "changed" if compilation.code_changed else "stable" if compilation.code_changed is not none else "n/a", "baseline": compilation.baseline_hash, "candidate": compilation.candidate_hash}) }}</td>
+                        {% for metric in compilation.metrics %}<td>{{ metric_pair(metric) }}</td>{% endfor %}
+                      </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}<p class="card-note">No per-compilation metrics are available for this run.</p>{% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}<tr><td colspan="6" class="card-note">No replay runs are available.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Generated locally by replay canary · <a href="https://github.com/oracle/graal/blob/master/compiler/docs/ReplayCompilation.md">Replay Compilation documentation</a></footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const warmup = document.getElementById("include-warmup");
+
+  function updateWarmupRows() {
+    document.querySelectorAll(".compilation-table tbody tr").forEach(function (row) {
+      row.hidden = row.dataset.warmup === "true" && !warmup.checked;
+    });
+  }
+
+  function setRunOpen(detail, opening) {
+    const summary = detail.previousElementSibling;
+    const button = summary.querySelector("[data-run-toggle]");
+    detail.hidden = !opening;
+    summary.classList.toggle("run-summary-expanded", opening);
+    button.setAttribute("aria-expanded", String(opening));
+    button.textContent = opening ? "Hide details" : "Show details";
+  }
+
+  function detailForHash() {
+    if (!window.location.hash) return null;
+    const detail = document.getElementById(window.location.hash.slice(1));
+    return detail && detail.classList.contains("detail-row") ? detail : null;
+  }
+
+  document.addEventListener("click", function (event) {
+    const link = event.target.closest(".run-link");
+    if (link) {
+      setRunOpen(document.getElementById(link.hash.slice(1)), true);
+      return;
+    }
+    const toggle = event.target.closest("[data-run-toggle]");
+    if (toggle) {
+      const detail = document.getElementById(toggle.dataset.runToggle);
+      setRunOpen(detail, detail.hidden);
+      if (!detail.hidden) history.replaceState(null, "", "#" + detail.id);
+    }
+  });
+  warmup.addEventListener("change", updateWarmupRows);
+
+  const target = detailForHash();
+  if (target) setRunOpen(target, true);
+  window.addEventListener("hashchange", function () {
+    const detail = detailForHash();
+    if (detail) setRunOpen(detail, true);
+  });
+  updateWarmupRows();
+}());
+</script>
+</body>
+</html>

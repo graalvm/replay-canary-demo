@@ -1,0 +1,44 @@
+{
+  "commit": {
+    "author_name": "Contributor",
+    "committed_at": "2026-07-30T12:34:56Z",
+    "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "parent_hashes": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "subject": "Compiler revision"
+  },
+  "corpus_id": "00000000-0000-4000-8000-000000000001",
+  "created_at": "2026-07-30T12:34:56Z",
+  "graalvm_home": "/graalvm",
+  "id": "00000000-0000-4000-8000-000000000002",
+  "label": "baseline",
+  "mx_version": "mx 7",
+  "replay_parameters": {
+    "heap_size": "8g",
+    "iterations": 2,
+    "retired_instruction_event": "PAPI_TOT_INS",
+    "replay_args": [],
+    "timeout_seconds": 1200
+  },
+  "runs": [
+    {
+      "key": {
+        "run_index": 0,
+        "suite_name": "renaissance",
+        "workload_name": "scrabble"
+      },
+      "log": "runs/renaissance--scrabble--0/output.log",
+      "metrics": "runs/renaissance--scrabble--0/metrics.json",
+      "outcome": {
+        "duration_seconds": 1.25,
+        "exit_code": 0,
+        "message": null,
+        "status": "succeeded",
+        "timed_out": false
+      },
+      "parsed_compilations": 4,
+      "parsed_iterations": 2
+    }
+  ]
+}
