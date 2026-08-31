@@ -437,7 +437,7 @@ class RecordService:
             "-XX:+UseG1GC",
             "-Djdk.graal.CompilationFailureAction=ExitVM",
             f"-Djdk.graal.DumpPath={dump}",
-            f"-Djdk.graal.RecordForReplay={','.join(window.hot_methods())}",
+            f"-Djdk.graal.RecordForReplay={_record_for_replay_filter(window.hot_methods())}",
             *request.jvm_args,
             *suite.benchmark(name.workload_name).arguments,
         )
@@ -546,6 +546,23 @@ class RecordService:
                 message=message,
             ),
         )
+
+
+def _record_for_replay_filter(methods: tuple[str, ...]) -> str:
+    """Encode hot methods for the compiler's ``MethodFilter`` parser.
+
+    Zero-parameter methods must omit the ``()`` suffix to use a broader filter,
+    because ``MethodFilter`` may interpret an empty parameter list as one
+    wildcard parameter.
+
+    :param methods: Stable hot-method names.
+    :return: Comma-separated ``RecordForReplay`` filter.
+    """
+
+    return ",".join(
+        method.removesuffix("()") if method.endswith("()") else method
+        for method in methods
+    )
 
 
 def _copy_replay_files(

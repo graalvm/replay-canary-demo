@@ -265,6 +265,22 @@ def test_record_logs_one_progress_line_per_run(
     ]
 
 
+def test_zero_parameter_hot_method_uses_compatible_recording_filter(
+    tmp_path: Path,
+) -> None:
+    runner = FakeRunner()
+    service, _, _ = create_service(tmp_path, FakeMx(), runner)
+
+    service.record(request(runs=2))
+
+    record_filter = next(
+        argument
+        for argument in runner.commands[1]
+        if argument.startswith("-Djdk.graal.RecordForReplay=")
+    )
+    assert record_filter == "-Djdk.graal.RecordForReplay=example.Hot.run"
+
+
 def test_successful_run_workspace_is_removed_before_next_run(
     tmp_path: Path,
 ) -> None:
